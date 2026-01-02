@@ -1,9 +1,9 @@
 import asyncio
 from pyppeteer import launch
 import os
-import time
+import shutil
 
-# --- STREAM BOT AGENT - FINAL REPLIT VERSION ---
+# --- STREAM BOT AGENT - FINAL, CORRECTED REPLIT VERSION ---
 
 # --- CONFIGURATION ---
 # These must be set as Secrets in the Replit sidebar.
@@ -11,20 +11,42 @@ DISCORD_EMAIL = os.environ.get("DISCORD_EMAIL")
 DISCORD_PASSWORD = os.environ.get("DISCORD_PASSWORD")
 SERVER_NAME = os.environ.get("SERVER_NAME")
 VOICE_CHANNEL_NAME = os.environ.get("VOICE_CHANNEL_NAME")
-STREAM_URL = os.environ.get("STREAM_URL", "https://www.youtube.com/" ) # Default URL if not set in secrets
 
-async def main():
+def get_stream_url():
+    """Reads the URL from the control.txt file."""
+    try:
+        with open('control.txt', 'r') as f:
+            for line in f:
+                if line.strip() and not line.startswith('#'):
+                    return line.strip()
+    except FileNotFoundError:
+        print("WARNING: control.txt not found. Using default URL.")
+        return "https://www.replit.com/community"
+    return "https://www.replit.com/community"
+
+async def main( ):
     print("--- Starting STREAM Bot Agent ---")
     
+    STREAM_URL = get_stream_url()
     if not all([DISCORD_EMAIL, DISCORD_PASSWORD, SERVER_NAME, VOICE_CHANNEL_NAME]):
         print("FATAL: One or more secrets (DISCORD_EMAIL, etc.) are not set. Stopping.")
         return
 
+    # --- THIS IS THE FIX ---
+    # Automatically find the path to the Chromium executable instead of hard-coding it.
+    executable_path = shutil.which("chromium")
+    if not executable_path:
+        print("FATAL: Cannot find Chromium executable. Make sure 'pkgs.chromium' is in replit.nix.")
+        return
+    print(f"Found Chromium at: {executable_path}")
+    # --- END OF FIX ---
+
     browser = None
+    page = None
     try:
         print("Launching browser...")
         browser = await launch(
-            executablePath='/nix/store/b2133331y5h68vj2g38g3f2k5v338q4v-google-chrome-stable-114.0.5735.198/bin/google-chrome-stable',
+            executablePath=executable_path, # Use the automatically found path
             headless=False,
             args=[
                 '--no-sandbox',
@@ -82,7 +104,7 @@ async def main():
         print("Screen share button clicked.")
         await asyncio.sleep(2)
 
-        window_selector = "//div[text()='Google Chrome']" 
+        window_selector = "//div[text()='Chromium']" # The window name is now Chromium
         application_window = await page.waitForXPath(window_selector)
         await application_window.click()
         print("Application window selected.")
@@ -105,5 +127,4 @@ async def main():
         print("--- STREAM Bot Agent has shut down. ---")
 
 if __name__ == "__main__":
-    # The xvfb-run command is handled by the .replit file in this setup
     asyncio.run(main())
