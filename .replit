@@ -1,9 +1,13 @@
-{ pkgs }: {
-  deps = [
-    # This is the correct name for Chromium (the open-source version of Chrome) in the Replit Nix environment.
-    pkgs.chromium
+# This command will run your bot.
+run = "python main.py"
 
-    # This is the correct name for the virtual screen package.
-    pkgs.xvfb_run
-  ];
-}
+# Specifies the programming language environment.
+language = "python3"
+
+# Tells Replit to use the replit.nix file for system packages.
+[nix]
+channel = "stable-23_11"
+
+# This block keeps the bot alive for "Always On".
+[deployment]
+run = ["python", "main.py"]
