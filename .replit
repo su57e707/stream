@@ -1,0 +1,13 @@
+# This command will run your bot.
+run = "python main.py"
+
+# Specifies the programming language environment.
+language = "python3"
+
+# Tells Replit to use the replit.nix file for system packages.
+[nix]
+channel = "stable-23_11"
+
+# This block keeps the bot alive for "Always On".
+[deployment]
+run = ["python", "main.py"]
