@@ -32,21 +32,19 @@ async def main( ):
         print("FATAL: One or more secrets (DISCORD_EMAIL, etc.) are not set. Stopping.")
         return
 
-    # --- THIS IS THE FIX ---
-    # Automatically find the path to the Chromium executable instead of hard-coding it.
+    # Automatically find the path to the Chromium executable.
     executable_path = shutil.which("chromium")
     if not executable_path:
         print("FATAL: Cannot find Chromium executable. Make sure 'pkgs.chromium' is in replit.nix.")
         return
     print(f"Found Chromium at: {executable_path}")
-    # --- END OF FIX ---
 
     browser = None
     page = None
     try:
         print("Launching browser...")
         browser = await launch(
-            executablePath=executable_path, # Use the automatically found path
+            executablePath=executable_path,
             headless=False,
             args=[
                 '--no-sandbox',
@@ -68,8 +66,12 @@ async def main( ):
         await page.type('input[name="password"]', DISCORD_PASSWORD, {'delay': 100})
         await page.click('button[type="submit"]')
         
-        print("Waiting for login to complete...")
-        await page.waitForNavigation({'waitUntil': 'networkidle2'})
+        print("Waiting for login to complete (with a longer timeout)...")
+        # --- THIS IS THE FIX ---
+        # Increased the timeout to 90 seconds to handle slow loading on Replit.
+        await page.waitForNavigation({'waitUntil': 'networkidle2', 'timeout': 90000})
+        # --- END OF FIX ---
+        
         await page.waitForSelector("div[aria-label='Servers']", {'timeout': 90000})
         print("Login successful!")
         await asyncio.sleep(5)
